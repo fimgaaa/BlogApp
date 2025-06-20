@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+
 import 'forgot_password.dart';
 import 'profile_page.dart';
 import 'register_page.dart';
@@ -34,16 +35,16 @@ class _LoginPageState extends State<LoginPage>
     ).animate(_controller);
   }
 
- // void _login() {
-    Future<void> _login() async {
+  // void _login() {
+  Future<void> _login() async {
     setState(() {
       _isLoading = true;
     });
     //Future.delayed(Duration(seconds: 2), () {
-      //setState(() {
-        //_isLoading = false;
-      //});
-     try {
+    //setState(() {
+    //_isLoading = false;
+    //});
+    /* try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -54,6 +55,28 @@ class _LoginPageState extends State<LoginPage>
         MaterialPageRoute(builder: (context) => ProfilePage()),
       );
    // });
+  }*/
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfilePage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? 'Authentication error')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   //dispose(), Flutter'da bir widget ekrandan kaldırılırken çağrılan bir metottur.
@@ -124,12 +147,15 @@ class _LoginPageState extends State<LoginPage>
                       onTap: _isLoading ? null : _login,
                       child: AnimatedContainer(
                         duration: Duration(milliseconds: 300),
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 40,
+                          vertical: 15,
+                        ),
                         decoration: BoxDecoration(
-                          color: _isLoading
-                              ? Colors.green.shade400
-                              : Colors.deepPurple,
+                          color:
+                              _isLoading
+                                  ? Colors.green.shade400
+                                  : Colors.deepPurple,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
@@ -139,23 +165,24 @@ class _LoginPageState extends State<LoginPage>
                             ),
                           ],
                         ),
-                        child: _isLoading
-                            ? SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 3,
+                        child:
+                            _isLoading
+                                ? SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 3,
+                                  ),
+                                )
+                                : Text(
+                                  "🚀 Giriş Yap",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              )
-                            : Text(
-                                "🚀 Giriş Yap",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
                       ),
                     ),
                     SizedBox(height: 10),
@@ -171,7 +198,9 @@ class _LoginPageState extends State<LoginPage>
                       child: Text(
                         "Şifremi Unuttum 🔑",
                         style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     TextButton(
@@ -186,7 +215,9 @@ class _LoginPageState extends State<LoginPage>
                       child: Text(
                         "Üye Ol 👤",
                         style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],

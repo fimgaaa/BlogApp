@@ -1,7 +1,7 @@
-import 'package:blog_app_son/all_blogs.dart'; // AllBlogsPage sayfasını import et
+import 'package:blog_app_son/all_blogs.dart';
 import 'package:flutter/material.dart';
 
-import 'login_page.dart'; // LoginPage sayfasını import et
+import 'login_page.dart';
 
 class HomePage extends StatelessWidget {
   @override
