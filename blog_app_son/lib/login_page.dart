@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'forgot_password.dart';
 import 'profile_page.dart';
 import 'register_page.dart';
@@ -34,19 +34,26 @@ class _LoginPageState extends State<LoginPage>
     ).animate(_controller);
   }
 
-  void _login() {
+ // void _login() {
+    Future<void> _login() async {
     setState(() {
       _isLoading = true;
     });
-    Future.delayed(Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-      });
+    //Future.delayed(Duration(seconds: 2), () {
+      //setState(() {
+        //_isLoading = false;
+      //});
+     try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => ProfilePage()),
       );
-    });
+   // });
   }
 
   //dispose(), Flutter'da bir widget ekrandan kaldırılırken çağrılan bir metottur.
