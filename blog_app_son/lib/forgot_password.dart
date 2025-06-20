@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -16,7 +17,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     super.dispose();
   }
 
-  // Şifre sıfırlama işlemini simüle eden fonksiyon
+  // Şifre sıfırlama işlemi
   Future<void> _resetPassword() async {
     // Form geçerli mi kontrol et
     if (_formKey.currentState?.validate() ?? false) {
@@ -28,21 +29,53 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       String email = _emailController.text.trim();
       print("Şifre sıfırlama isteği gönderiliyor: $email");
 
-      // Simülasyon için 2 saniye bekle
-      await Future.delayed(Duration(seconds: 2));
+      try {
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
-      setState(() {
-        _isLoading = false; // Yükleniyor durumunu bitir
-      });
+        setState(() {
+          _isLoading = false; // Yükleniyor durumunu bitir
+        });
 
-      // Kullanıcıya geri bildirim ver
-      ScaffoldMessenger.of(context).showSnackBar(
+        // Kullanıcıya geri bildirim ver
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$email adresine şifre sıfırlama bağlantısı gönderildi (eğer kayıtlıysa).',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } on FirebaseAuthException catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.message ?? 'Şifre sıfırlama işlemi başarısız oldu.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Bir hata oluştu: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      /*   ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              '$email adresine şifre sıfırlama bağlantısı gönderildi (eğer kayıtlıysa).'),
+            '$email adresine şifre sıfırlama bağlantısı gönderildi (eğer kayıtlıysa).',
+          ),
           backgroundColor: Colors.green,
         ),
-      );
+      );*/
 
       // İsteğe bağlı: Kullanıcıyı giriş sayfasına geri yönlendir
       // Navigator.pop(context);
@@ -69,7 +102,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           gradient: LinearGradient(
             colors: [
               Colors.blue.shade50,
-              Colors.pinkAccent.shade100.withOpacity(0.5)
+              Colors.pinkAccent.shade100.withOpacity(0.5),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -96,10 +129,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   Text(
                     "Şifrenizi sıfırlamak için lütfen kayıtlı e-posta adresinizi girin.",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.black87),
                   ),
                   SizedBox(height: 25),
                   TextFormField(
@@ -128,9 +158,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                   SizedBox(height: 30),
                   ElevatedButton(
-                    onPressed: _isLoading
-                        ? null
-                        : _resetPassword, // Yükleniyorsa butonu devre dışı bırak
+                    onPressed:
+                        _isLoading
+                            ? null
+                            : _resetPassword, // Yükleniyorsa butonu devre dışı bırak
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple, // Arka plan rengi
                       padding: EdgeInsets.symmetric(vertical: 15),
@@ -139,24 +170,25 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       ),
                       elevation: 5,
                     ),
-                    child: _isLoading
-                        ? SizedBox(
-                            // Yüklenirken dönen ikon göster
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 3,
+                    child:
+                        _isLoading
+                            ? SizedBox(
+                              // Yüklenirken dönen ikon göster
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
+                            )
+                            : Text(
+                              "🚀 Sıfırlama Linki Gönder",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          )
-                        : Text(
-                            "🚀 Sıfırlama Linki Gönder",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
                   ),
                 ],
               ),
