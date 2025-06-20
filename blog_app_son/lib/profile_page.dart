@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:blog_app_son/all_blogs.dart'; // Tüm blog yazıları için
+import 'package:blog_app_son/all_blogs.dart';
 import 'package:blog_app_son/blog_posts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,15 +14,16 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  TextEditingController _nameController = TextEditingController();
-  TextEditingController _bioController = TextEditingController();
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
-  //String _profileImage = 'assets/profile_picture.jpg';
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
+  final TextEditingController _instagramController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   String _profileImage = 'lib/images/avatar.png';
   final ImagePicker _picker = ImagePicker();
   XFile? _newImageFile;
   bool _isEditing = false;
+  String _email = '';
+  String _joinedDate = '';
 
   @override
   void initState() {
@@ -34,26 +35,29 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
-      _emailController.text = user.email ?? '';
+
+      _email = user.email ?? '';
       final doc =
           await FirebaseFirestore.instance
               .collection('users')
               .doc(user.uid)
               .get();
+
       if (doc.exists) {
         final data = doc.data()!;
         setState(() {
           _nameController.text = data['name'] ?? '';
           _bioController.text = data['bio'] ?? '';
+          _instagramController.text = data['instagram'] ?? '';
+          _phoneController.text = data['phone'] ?? '';
           _profileImage = data['imageUrl'] ?? _profileImage;
+          _joinedDate = data['joinedDate'] ?? '';
         });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Profil yüklenemedi: $e')));
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Profil yüklenemedi: $e')));
     }
   }
 
@@ -68,11 +72,9 @@ class _ProfilePageState extends State<ProfilePage> {
         });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Resim seçilemedi: $e')));
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Resim seçilemedi: $e')));
     }
   }
 
@@ -91,25 +93,28 @@ class _ProfilePageState extends State<ProfilePage> {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'name': _nameController.text,
         'bio': _bioController.text,
+        'instagram': _instagramController.text,
+        'phone': _phoneController.text,
         'imageUrl': imageUrl,
+        'joinedDate':
+            _joinedDate.isNotEmpty
+                ? _joinedDate
+                : DateTime.now().toIso8601String(),
       });
 
-      if (mounted) {
-        setState(() {
-          _isEditing = false;
-          _profileImage = imageUrl;
-          _newImageFile = null;
-        });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Profil güncellendi')));
-      }
+      setState(() {
+        _isEditing = false;
+        _profileImage = imageUrl;
+        _newImageFile = null;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Profil güncellendi')));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Hata: $e')));
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Hata: $e')));
     }
   }
 
@@ -125,26 +130,36 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: EdgeInsets.all(20.0),
         child: ListView(
           children: [
-            // Profil Fotoğrafı
             Center(
-              child: GestureDetector(
-                onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 80,
-                  // backgroundImage: AssetImage(_profileImage),
-                  backgroundImage:
-                      _newImageFile != null
-                          ? FileImage(File(_newImageFile!.path))
-                          : _profileImage.startsWith('http')
-                          ? NetworkImage(_profileImage)
-                          : AssetImage(_profileImage) as ImageProvider,
-                  backgroundColor: Colors.transparent,
-                ),
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 80,
+                    backgroundImage:
+                        _newImageFile != null
+                            ? FileImage(File(_newImageFile!.path))
+                            : _profileImage.startsWith('http')
+                            ? NetworkImage(_profileImage)
+                            : AssetImage(_profileImage) as ImageProvider,
+                    backgroundColor: Colors.transparent,
+                  ),
+                  if (_isEditing)
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: CircleAvatar(
+                          backgroundColor: Colors.black54,
+                          radius: 25,
+                          child: Icon(Icons.camera_alt, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             SizedBox(height: 20),
-
-            // Kullanıcı Adı
             _isEditing
                 ? TextField(
                   controller: _nameController,
@@ -164,8 +179,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
             SizedBox(height: 10),
-
-            // Biyografi
             _isEditing
                 ? TextField(
                   controller: _bioController,
@@ -183,29 +196,43 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
             SizedBox(height: 10),
-
-            // E-posta Adresi ve Şifre
-            if (_isEditing) ...[
+            Center(
+              child: Text(
+                _email,
+                style: TextStyle(fontSize: 16, color: Colors.black54),
+              ),
+            ),
+            SizedBox(height: 10),
+            if (_isEditing)
               TextField(
-                controller: _emailController,
+                controller: _instagramController,
                 decoration: InputDecoration(
-                  labelText: "E-posta",
+                  labelText: "Instagram",
                   border: OutlineInputBorder(),
                 ),
-              ),
-              SizedBox(height: 10),
+              )
+            else
+              Center(child: Text("Instagram: ${_instagramController.text}")),
+            SizedBox(height: 10),
+            if (_isEditing)
               TextField(
-                controller: _passwordController,
-                obscureText: true,
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
-                  labelText: "Şifre",
+                  labelText: "Telefon",
                   border: OutlineInputBorder(),
                 ),
+              )
+            else
+              Center(child: Text("Telefon: ${_phoneController.text}")),
+            SizedBox(height: 10),
+            Center(
+              child: Text(
+                "Kayıt Tarihi: ${_joinedDate.isNotEmpty ? _joinedDate.split('T').first : 'Bilinmiyor'}",
+                style: TextStyle(color: Colors.grey),
               ),
-              SizedBox(height: 20),
-            ],
-
-            // Profil Düzenleme Butonu
+            ),
+            SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 if (_isEditing) {
@@ -220,80 +247,44 @@ class _ProfilePageState extends State<ProfilePage> {
                 _isEditing ? 'Değişiklikleri Kaydet' : 'Profilimi Düzenle',
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    _isEditing ? Colors.pinkAccent : Colors.deepPurple,
+                backgroundColor: Colors.deepPurple,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
             ),
-            SizedBox(height: 20),
-            /*
-            // Yeni Yazı Ekleme
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  // Yeni yazı sayfasına yönlendirme
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            NewPostPage()), // Burada yönlendirme yapılır
-                  );
-                },
-                child: Text('Yeni Yazı Yaz'),
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.pinkAccent,
-                  onPrimary: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => BlogPostsPage()),
+                );
+              },
+              child: Text("Yazılarım"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
                 ),
               ),
             ),
-            SizedBox(height: 20),
-*/
-            // Yazılarım Butonu
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => BlogPostsPage()),
-                  );
-                },
-                child: Text('Yazılarım'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-
-            // Tüm Blog Yazıları
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AllBlogsPage()),
-                  );
-                },
-                child: Text('Tüm Blog Yazıları'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => AllBlogsPage()),
+                );
+              },
+              child: Text("Tüm Blog Yazıları"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
                 ),
               ),
             ),
@@ -301,5 +292,14 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _bioController.dispose();
+    _instagramController.dispose();
+    _phoneController.dispose();
+    super.dispose();
   }
 }
