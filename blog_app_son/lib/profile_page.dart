@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:blog_app_son/all_blogs.dart'; // Tüm blog yazıları için
 import 'package:blog_app_son/blog_posts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -33,10 +35,11 @@ class _ProfilePageState extends State<ProfilePage> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
       _emailController.text = user.email ?? '';
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
       if (doc.exists) {
         final data = doc.data()!;
         setState(() {
@@ -47,15 +50,18 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Profil yüklenemedi: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Profil yüklenemedi: $e')));
       }
     }
   }
 
   Future<void> _pickImage() async {
     try {
-      final XFile? picked = await _picker.pickImage(source: ImageSource.gallery);
+      final XFile? picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+      );
       if (picked != null) {
         setState(() {
           _newImageFile = picked;
@@ -63,8 +69,9 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Resim seçilemedi: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Resim seçilemedi: $e')));
       }
     }
   }
@@ -76,16 +83,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
       String imageUrl = _profileImage;
       if (_newImageFile != null) {
-        final ref = FirebaseStorage.instance
-            .ref('profile_images/${user.uid}');
+        final ref = FirebaseStorage.instance.ref('profile_images/${user.uid}');
         await ref.putFile(File(_newImageFile!.path));
         imageUrl = await ref.getDownloadURL();
       }
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .set({
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'name': _nameController.text,
         'bio': _bioController.text,
         'imageUrl': imageUrl,
@@ -97,16 +100,17 @@ class _ProfilePageState extends State<ProfilePage> {
           _profileImage = imageUrl;
           _newImageFile = null;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Profil güncellendi')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Profil güncellendi')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Hata: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Hata: $e')));
       }
     }
-  }
   }
 
   @override
@@ -127,12 +131,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 onTap: _pickImage,
                 child: CircleAvatar(
                   radius: 80,
-                 // backgroundImage: AssetImage(_profileImage),
-                  backgroundImage: _newImageFile != null
-                      ? FileImage(File(_newImageFile!.path))
-                      : _profileImage.startsWith('http')
-                        ? NetworkImage(_profileImage)
-                        : AssetImage(_profileImage) as ImageProvider,
+                  // backgroundImage: AssetImage(_profileImage),
+                  backgroundImage:
+                      _newImageFile != null
+                          ? FileImage(File(_newImageFile!.path))
+                          : _profileImage.startsWith('http')
+                          ? NetworkImage(_profileImage)
+                          : AssetImage(_profileImage) as ImageProvider,
                   backgroundColor: Colors.transparent,
                 ),
               ),
