@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 // Ana widget: RegisterPage adında bir StatefulWidget (durum tutar).
@@ -17,26 +18,45 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isRegistering =
       false; // Kayıt işlemi sırasında loading animasyonu için kontrol
 
-  // Kayıt işlemi (şimdilik simüle edilmiş, gerçek kayıt yok)
-  void _register() {
+  //void _register() {
+  Future<void> _register() async {
+    // Şifrelerin eşleşip eşleşmediğini kontrol et
+    if (_passwordController.text.trim() !=
+        _confirmPasswordController.text.trim()) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Şifreler eşleşmiyor')));
+      return;
+    }
+
     setState(() {
       _isRegistering = true;
     });
 
-    // 2 saniyelik bekleme (gerçek API yerine simülasyon)
-    Future.delayed(Duration(seconds: 2), () {
-      setState(() {
-        _isRegistering = false;
-      });
-
-      // Başarı mesajı göster
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Kayıt başarılı 🎉")),
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
+      // Başarı mesajı göster
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Kayıt başarılı 🎉')));
 
       // Login sayfasına geri dön
       Navigator.pop(context);
-    });
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message ?? 'Bir hata oluştu')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRegistering = false;
+        });
+      }
+    }
   }
 
   @override
@@ -49,10 +69,7 @@ class _RegisterPageState extends State<RegisterPage> {
         decoration: BoxDecoration(
           // Degrade renk geçişli arka plan
           gradient: LinearGradient(
-            colors: [
-              Colors.pink.shade200,
-              Colors.orange.shade100,
-            ],
+            colors: [Colors.pink.shade200, Colors.orange.shade100],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -121,15 +138,16 @@ class _RegisterPageState extends State<RegisterPage> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: _isRegistering
-                      ? CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          "🎉 Kayıt Ol",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                  child:
+                      _isRegistering
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                            "🎉 Kayıt Ol",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
                 ),
               ],
             ),
@@ -155,9 +173,7 @@ class _RegisterPageState extends State<RegisterPage> {
         hintText: hint,
         filled: true,
         fillColor: Colors.white.withOpacity(0.9),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
         prefixIcon: Icon(icon, color: Colors.purple),
       ),
     );
