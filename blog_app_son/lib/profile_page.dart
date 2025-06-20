@@ -1,6 +1,10 @@
 import 'package:blog_app_son/all_blogs.dart'; // Tüm blog yazıları için
 import 'package:blog_app_son/blog_posts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -12,16 +16,97 @@ class _ProfilePageState extends State<ProfilePage> {
   TextEditingController _bioController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
-  String _profileImage = 'assets/profile_picture.jpg';
+  //String _profileImage = 'assets/profile_picture.jpg';
+  String _profileImage = 'lib/images/avatar.png';
+  final ImagePicker _picker = ImagePicker();
+  XFile? _newImageFile;
   bool _isEditing = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController.text = 'Feyza IMGA';
-    _bioController.text =
-        'Blog yazarı, teknoloji ve seyahat tutkunu. Hayatımı renkli yazılarla şekillendiriyorum!';
-    _emailController.text = 'yaziciyildiz@example.com';
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      _emailController.text = user.email ?? '';
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        setState(() {
+          _nameController.text = data['name'] ?? '';
+          _bioController.text = data['bio'] ?? '';
+          _profileImage = data['imageUrl'] ?? _profileImage;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Profil yüklenemedi: $e')));
+      }
+    }
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? picked = await _picker.pickImage(source: ImageSource.gallery);
+      if (picked != null) {
+        setState(() {
+          _newImageFile = picked;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Resim seçilemedi: $e')));
+      }
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw 'Giriş yapılmadı';
+
+      String imageUrl = _profileImage;
+      if (_newImageFile != null) {
+        final ref = FirebaseStorage.instance
+            .ref('profile_images/${user.uid}');
+        await ref.putFile(File(_newImageFile!.path));
+        imageUrl = await ref.getDownloadURL();
+      }
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set({
+        'name': _nameController.text,
+        'bio': _bioController.text,
+        'imageUrl': imageUrl,
+      });
+
+      if (mounted) {
+        setState(() {
+          _isEditing = false;
+          _profileImage = imageUrl;
+          _newImageFile = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Profil güncellendi')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Hata: $e')));
+      }
+    }
+  }
   }
 
   @override
@@ -39,14 +124,15 @@ class _ProfilePageState extends State<ProfilePage> {
             // Profil Fotoğrafı
             Center(
               child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _profileImage = 'assets/another_profile_picture.jpg';
-                  });
-                },
+                onTap: _pickImage,
                 child: CircleAvatar(
                   radius: 80,
-                  backgroundImage: AssetImage(_profileImage),
+                 // backgroundImage: AssetImage(_profileImage),
+                  backgroundImage: _newImageFile != null
+                      ? FileImage(File(_newImageFile!.path))
+                      : _profileImage.startsWith('http')
+                        ? NetworkImage(_profileImage)
+                        : AssetImage(_profileImage) as ImageProvider,
                   backgroundColor: Colors.transparent,
                 ),
               ),
@@ -117,10 +203,13 @@ class _ProfilePageState extends State<ProfilePage> {
             // Profil Düzenleme Butonu
             ElevatedButton(
               onPressed: () {
-                //setState() çağrılıyor , ekranın yeniden çizilmesini sağlar.
-                setState(() {
-                  _isEditing = !_isEditing;
-                });
+                if (_isEditing) {
+                  _saveProfile();
+                } else {
+                  setState(() {
+                    _isEditing = true;
+                  });
+                }
               },
               child: Text(
                 _isEditing ? 'Değişiklikleri Kaydet' : 'Profilimi Düzenle',
