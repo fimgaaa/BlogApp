@@ -1,4 +1,4 @@
-import 'dart:io'; // Resim göstermek için
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class AllBlogsPage extends StatefulWidget {
@@ -7,38 +7,44 @@ class AllBlogsPage extends StatefulWidget {
 }
 
 class _AllBlogsPageState extends State<AllBlogsPage> {
-  List<Map<String, dynamic>> blogPosts = [
-    {
-      'title': 'Lorem Ipsum Dolor Sit Amet',
-      'author': 'YazıcıYıldız',
-      'category': 'Teknoloji',
-      'content': 'Bu, "Lorem Ipsum Dolor Sit Amet" başlıklı yazının tam içeriğidir.',
-      'imagePath': null,
-    },
-    {
-      'title': 'Consectetur Adipiscing Elit',
-      'author': 'TeknoBlogger',
-      'category': 'Bilim',
-      'content': 'Bilim dünyasındaki son gelişmeler...',
-      'imagePath': null,
-    },
-    {
-      'title': 'Flutter ile Arama Çubuğu Yapımı',
-      'author': 'YazıcıYıldız',
-      'category': 'Teknoloji',
-      'content': 'Bu yazıda, Flutter kullanarak arama çubuğu yapımı anlatılıyor.',
-      'imagePath': null,
-    },
-  ];
+  List<Map<String, dynamic>> blogPosts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPosts();
+  }
+
+  Future<void> _fetchPosts() async {
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collectionGroup('posts')
+            .where('isPublished', isEqualTo: true)
+            .orderBy('timestamp', descending: true)
+            .get();
+
+    setState(() {
+      blogPosts =
+          snapshot.docs.map((d) {
+            final data = d.data();
+            data['id'] = d.id;
+            return data;
+          }).toList();
+    });
+  }
 
   String? selectedCategory;
 
   @override
   Widget build(BuildContext context) {
-    final filteredPosts = blogPosts
-        .where((post) =>
-    selectedCategory == null || post['category'] == selectedCategory)
-        .toList();
+    final filteredPosts =
+        blogPosts
+            .where(
+              (post) =>
+                  selectedCategory == null ||
+                  post['category'] == selectedCategory,
+            )
+            .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -65,29 +71,39 @@ class _AllBlogsPageState extends State<AllBlogsPage> {
               ];
               categories.sort();
               List<PopupMenuEntry<String?>> menuItems = [];
-              menuItems.add(PopupMenuItem<String?>(
-                value: null,
-                child: Text(
-                  'Tümü',
-                  style: TextStyle(
-                      fontWeight: selectedCategory == null
-                          ? FontWeight.bold
-                          : FontWeight.normal),
+              menuItems.add(
+                PopupMenuItem<String?>(
+                  value: null,
+                  child: Text(
+                    'Tümü',
+                    style: TextStyle(
+                      fontWeight:
+                          selectedCategory == null
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                    ),
+                  ),
                 ),
-              ));
+              );
               menuItems.add(PopupMenuDivider());
-              menuItems.addAll(categories
-                  .map((category) => PopupMenuItem<String?>(
-                value: category,
-                child: Text(
-                  category,
-                  style: TextStyle(
-                      fontWeight: selectedCategory == category
-                          ? FontWeight.bold
-                          : FontWeight.normal),
-                ),
-              ))
-                  .toList());
+              menuItems.addAll(
+                categories
+                    .map(
+                      (category) => PopupMenuItem<String?>(
+                        value: category,
+                        child: Text(
+                          category,
+                          style: TextStyle(
+                            fontWeight:
+                                selectedCategory == category
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              );
               return menuItems;
             },
           ),
@@ -95,107 +111,140 @@ class _AllBlogsPageState extends State<AllBlogsPage> {
       ),
       body: Padding(
         padding: EdgeInsets.all(10.0),
-        child: filteredPosts.isEmpty
-            ? Center(
-          child: Text(
-            selectedCategory == null
-                ? "Henüz blog yazısı yok."
-                : "'$selectedCategory' kategorisinde yazı bulunamadı.",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
-        )
-            : GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.8,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-          ),
-          itemCount: filteredPosts.length,
-          itemBuilder: (context, index) {
-            final post = filteredPosts[index];
-            final imagePath = post['imagePath'] as String?;
+        child:
+            filteredPosts.isEmpty
+                ? Center(
+                  child: Text(
+                    selectedCategory == null
+                        ? "Henüz blog yazısı yok."
+                        : "'$selectedCategory' kategorisinde yazı bulunamadı.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                )
+                : GridView.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.8,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  itemCount: filteredPosts.length,
+                  itemBuilder: (context, index) {
+                    final post = filteredPosts[index];
+                    final imageUrl = post['imageUrl'] as String?;
+                    // final imagePath = post['imagePath'] as String?;
 
-            return Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BlogDetailPage(post: post),
-                    ),
-                  );
-                },
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Container(
-                        color: Colors.grey[200],
-                        child: imagePath != null && imagePath.isNotEmpty
-                            ? Image.file(
-                          File(imagePath),
-                          fit: BoxFit.cover,
-                          errorBuilder:
-                              (context, error, stackTrace) {
-                            return Icon(Icons.broken_image,
-                                size: 40, color: Colors.grey[500]);
-                          },
-                        )
-                            : Icon(Icons.article_outlined,
-                            size: 50, color: Colors.grey[600]),
+                    return Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BlogDetailPage(post: post),
+                            ),
+                          );
+                        },
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment:
-                          MainAxisAlignment.spaceEvenly,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Text(
-                              post['title'] ?? 'Başlık Yok',
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            Expanded(
+                              flex: 3,
+                              child: Container(
+                                color: Colors.grey[200],
+                                /*       child:
+                                    imagePath != null && imagePath.isNotEmpty
+                                        ? Image.file(
+                                          File(imagePath),
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (
+                                            context,
+                                            error,
+                                            stackTrace,
+                                          ) {
+                                            return Icon(
+                                              Icons.broken_image,
+                                              size: 40,
+                                              color: Colors.grey[500],
+                                            );
+                                          },
+                                        )*/
+                                child:
+                                    imageUrl != null && imageUrl.isNotEmpty
+                                        ? Image.network(
+                                          imageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (
+                                            context,
+                                            error,
+                                            stackTrace,
+                                          ) {
+                                            return Icon(
+                                              Icons.broken_image,
+                                              size: 40,
+                                              color: Colors.grey[500],
+                                            );
+                                          },
+                                        )
+                                        : Icon(
+                                          Icons.article_outlined,
+                                          size: 50,
+                                          color: Colors.grey[600],
+                                        ),
+                              ),
                             ),
-                            Text(
-                              post['author'] ?? 'Yazar Yok',
-                              style: TextStyle(
-                                  fontSize: 13, color: Colors.grey[700]),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              post['category'] ?? 'Kategori Yok',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).primaryColor,
-                                  fontStyle: FontStyle.italic),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Expanded(
+                              flex: 2,
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Text(
+                                      post['title'] ?? 'Başlık Yok',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      post['author'] ?? 'Yazar Yok',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[700],
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      post['category'] ?? 'Kategori Yok',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Theme.of(context).primaryColor,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              ),
-            );
-          },
-        ),
       ),
     );
   }
@@ -209,12 +258,10 @@ class BlogDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final imagePath = post['imagePath'] as String?;
+    final imageUrl = post['imageUrl'] as String?;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(post['title'] ?? 'Blog Detayı'),
-      ),
+      appBar: AppBar(title: Text(post['title'] ?? 'Blog Detayı')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -222,8 +269,9 @@ class BlogDetailPage extends StatelessWidget {
           children: [
             Text(
               post['title'] ?? 'Başlık Bulunamadı',
-              style: textTheme.headlineMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             SizedBox(height: 12),
             Row(
@@ -232,26 +280,34 @@ class BlogDetailPage extends StatelessWidget {
                 SizedBox(width: 4),
                 Text(
                   post['author'] ?? 'Bilinmeyen Yazar',
-                  style:
-                  textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[700],
+                  ),
                 ),
                 SizedBox(width: 16),
-                Icon(Icons.category_outlined,
-                    size: 16, color: Colors.grey[700]),
+                Icon(
+                  Icons.category_outlined,
+                  size: 16,
+                  color: Colors.grey[700],
+                ),
                 SizedBox(width: 4),
                 Text(
                   post['category'] ?? 'Kategorisiz',
                   style: textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[700], fontStyle: FontStyle.italic),
+                    color: Colors.grey[700],
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ],
             ),
             SizedBox(height: 16),
-            if (imagePath != null && imagePath.isNotEmpty)
+            if (imageUrl != null && imageUrl.isNotEmpty)
               ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
-                child: Image.file(
-                  File(imagePath),
+                // child: Image.file(
+                // File(imagePath),
+                child: Image.network(
+                  imageUrl,
                   width: double.infinity,
                   height: 250,
                   fit: BoxFit.cover,
@@ -260,13 +316,17 @@ class BlogDetailPage extends StatelessWidget {
                       height: 200,
                       color: Colors.grey[200],
                       child: Center(
-                          child: Icon(Icons.broken_image,
-                              size: 50, color: Colors.grey[500])),
+                        child: Icon(
+                          Icons.broken_image,
+                          size: 50,
+                          color: Colors.grey[500],
+                        ),
+                      ),
                     );
                   },
                 ),
               ),
-            if (imagePath != null && imagePath.isNotEmpty) SizedBox(height: 16),
+            if (imageUrl != null && imageUrl.isNotEmpty) SizedBox(height: 16),
             Divider(height: 24, thickness: 1),
             Text(
               post['content'] ?? 'İçerik yüklenemedi.',
