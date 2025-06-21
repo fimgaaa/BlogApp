@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -34,10 +35,21 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      // await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
+      final user = credential.user;
+      if (user != null) {
+        final avatarUrl =
+            'https://api.dicebear.com/6.x/initials/png?seed=${user.uid}';
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'imageUrl': avatarUrl,
+          'joinedDate': DateTime.now().toIso8601String(),
+        });
+      }
       // Başarı mesajı göster
       if (!mounted) return;
       ScaffoldMessenger.of(
