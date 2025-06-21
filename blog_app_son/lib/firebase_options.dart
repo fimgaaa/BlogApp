@@ -46,7 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '832343095246',
     projectId: 'app-blog-198a3',
     authDomain: 'app-blog-198a3.firebaseapp.com',
-    storageBucket: 'app-blog-198a3.firebasestorage.app',
+    storageBucket: 'app-blog-198a3.appspot.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -54,7 +54,7 @@ class DefaultFirebaseOptions {
     appId: '1:832343095246:android:007eb6a4f2ad8a34f71d9f',
     messagingSenderId: '832343095246',
     projectId: 'app-blog-198a3',
-    storageBucket: 'app-blog-198a3.firebasestorage.app',
+    storageBucket: 'app-blog-198a3.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -62,7 +62,7 @@ class DefaultFirebaseOptions {
     appId: '1:832343095246:ios:f8dcb461a98cc077f71d9f',
     messagingSenderId: '832343095246',
     projectId: 'app-blog-198a3',
-    storageBucket: 'app-blog-198a3.firebasestorage.app',
+    storageBucket: 'app-blog-198a3.appspot.com',
     iosBundleId: 'com.blogApp.blogAppSon',
   );
 
@@ -71,7 +71,7 @@ class DefaultFirebaseOptions {
     appId: '1:832343095246:ios:f8dcb461a98cc077f71d9f',
     messagingSenderId: '832343095246',
     projectId: 'app-blog-198a3',
-    storageBucket: 'app-blog-198a3.firebasestorage.app',
+    storageBucket: 'app-blog-198a3.appspot.com',
     iosBundleId: 'com.blogApp.blogAppSon',
   );
 
@@ -81,6 +81,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '832343095246',
     projectId: 'app-blog-198a3',
     authDomain: 'app-blog-198a3.firebaseapp.com',
-    storageBucket: 'app-blog-198a3.firebasestorage.app',
+    storageBucket: 'app-blog-198a3.appspot.com',
   );
 }

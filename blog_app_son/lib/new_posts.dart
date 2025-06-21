@@ -1,5 +1,8 @@
 import 'dart:io'; // File sınıfı için eklendi
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart'; // image_picker paketi eklendi
 
@@ -97,20 +100,54 @@ class _NewPostPageState extends State<NewPostPage> {
     );
   }
 
-  void _savePost() {
-    if (_titleController.text.isNotEmpty &&
+  /*  void _savePost() {
+  if (_titleController.text.isNotEmpty &&
         _contentController.text.isNotEmpty) {
       // yeni gönderi verisi oluşturur
-      final newPostData = {
-        'title': _titleController.text,
-        'content': _contentController.text,
-        'category': _selectedCategory,
-        'author': 'Yeni Kullanıcı', // Şimdilik sabit bir yazar adı
+      final newPostData = { */
+  Future<void> _savePost() async {
+    if (_titleController.text.isEmpty || _contentController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lütfen başlık ve içerik alanlarını doldurun.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) throw 'Kullanıcı bulunamadı';
+
+      String? imageUrl;
+      if (_selectedImageFile != null) {
+        final ref = FirebaseStorage.instance.ref(
+          'post_images/$userId/${DateTime.now().millisecondsSinceEpoch}',
+        );
+        await ref.putFile(File(_selectedImageFile!.path));
+        imageUrl = await ref.getDownloadURL();
+      }
+
+      final docRef = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('posts')
+          .add({
+            'title': _titleController.text,
+            'content': _contentController.text,
+            'category': _selectedCategory,
+            'imageUrl': imageUrl,
+            'isPublished': _isPublished,
+            'timestamp': FieldValue.serverTimestamp(),
+            'author': userId,
+          });
+      /* 'author': 'Yeni Kullanıcı', // Şimdilik sabit bir yazar adı
         'imagePath': _selectedImageFile?.path, // Resim yolunu ekle
         'isPublished': _isPublished.toString(), // Yayın durumunu ekle
-      };
+      }; */
 
-      print("--- Yeni Blog Yazısı Oluşturuldu ---");
+      /*     print("--- Yeni Blog Yazısı Oluşturuldu ---");
       print("Başlık: ${newPostData['title']}");
       print("İçerik: ${newPostData['content']}");
       print("Kategori: ${newPostData['category']}");
@@ -118,20 +155,25 @@ class _NewPostPageState extends State<NewPostPage> {
       print("Seçilen Resim Yolu: ${newPostData['imagePath'] ?? 'Yok'}");
       print("Yayın Durumu: ${_isPublished ? 'Yayınlandı' : 'Taslak'}");
       print("------------------------------------");
+*/
+      final doc = await docRef.get();
 
-      // Başarılı kayıttan sonra sayfayı kapat ve yeni veriyi geri dönfür
       if (mounted) {
-        Navigator.of(
+        /* Navigator.of(
           context,
-        ).pop(newPostData); // Oluşturulan veriyi geri döndür
+        ).pop(newPostData); // Oluşturulan veriyi geri döndür */
+        final data = doc.data() ?? {};
+        Navigator.of(context).pop({...data, 'id': docRef.id});
       }
-    } else {
-      // Kullanıcıya eksik alanlar olduğunu bildir
+      // } else {
+      //  // Kullanıcıya eksik alanlar olduğunu bildir
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        SnackBar(content: Text('Gönderi kaydedilemedi: $e')),
+        /* SnackBar(
           content: Text('Lütfen başlık ve içerik alanlarını doldurun.'),
           backgroundColor: Colors.redAccent,
-        ),
+        ), */
       );
     }
   }
