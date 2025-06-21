@@ -45,6 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
       if (doc.exists) {
         final data = doc.data()!;
+        if (!mounted) return;
         setState(() {
           _nameController.text = data['name'] ?? '';
           _bioController.text = data['bio'] ?? '';
@@ -67,6 +68,7 @@ class _ProfilePageState extends State<ProfilePage> {
         source: ImageSource.gallery,
       );
       if (picked != null) {
+        if (!mounted) return;
         setState(() {
           _newImageFile = picked;
         });
@@ -85,11 +87,32 @@ class _ProfilePageState extends State<ProfilePage> {
 
       String imageUrl = _profileImage;
       if (_newImageFile != null) {
-        final ref = FirebaseStorage.instance.ref('profile_images/${user.uid}');
+        //   final ref = FirebaseStorage.instance.ref('profile_images/${user.uid}');
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final ref = FirebaseStorage.instance.ref().child(
+          'profile_images/${user.uid}/$fileName',
+        );
         await ref.putFile(File(_newImageFile!.path));
         imageUrl = await ref.getDownloadURL();
+        // Remove old profile image if it exists and is a network resource
+        if (_profileImage.startsWith('http') && _profileImage != imageUrl) {
+          try {
+            await FirebaseStorage.instance.refFromURL(_profileImage).delete();
+          } catch (_) {}
+        }
       }
 
+      /*   await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'name': _nameController.text,
+        'bio': _bioController.text,
+        'instagram': _instagramController.text,
+        'phone': _phoneController.text,
+        'imageUrl': imageUrl,
+        'joinedDate':
+            _joinedDate.isNotEmpty
+                ? _joinedDate
+                : DateTime.now().toIso8601String(),
+      });*/
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'name': _nameController.text,
         'bio': _bioController.text,
@@ -100,8 +123,8 @@ class _ProfilePageState extends State<ProfilePage> {
             _joinedDate.isNotEmpty
                 ? _joinedDate
                 : DateTime.now().toIso8601String(),
-      });
-
+      }, SetOptions(merge: true));
+      if (!mounted) return;
       setState(() {
         _isEditing = false;
         _profileImage = imageUrl;
