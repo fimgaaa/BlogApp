@@ -71,7 +71,6 @@ flutter:
   assets:
     - lib/images/home.jpg
     - lib/images/avatar.png
-    - models/vosk-model-small-tr-0.3/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
