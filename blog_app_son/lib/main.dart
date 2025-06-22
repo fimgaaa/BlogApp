@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+import 'package:blog_app_son/voice_assistant.dart';
+>>>>>>> parent of 3495cae (vosk)
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -22,6 +26,10 @@ class MyApp extends StatelessWidget {
       title: 'Blog Uygulaması',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: HomePage(),
+<<<<<<< HEAD
+=======
+      builder: (context, child) => VoiceAssistantOverlay(child: child!),
+>>>>>>> parent of 3495cae (vosk)
     );
   }
 }

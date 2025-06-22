@@ -42,6 +42,7 @@ dependencies:
 <<<<<<< HEAD
   speech_to_text: ^6.6.0
 <<<<<<< HEAD
+<<<<<<< HEAD
   vosk_flutter: ^0.0.11
 =======
   speech_to_text: ^6.4.0
@@ -51,6 +52,9 @@ dependencies:
 >>>>>>> parent of 400c2b6 (6.6)
 =======
 >>>>>>> parent of db829f7 (yeni asistan)
+=======
+  vosk_flutter: ^0.0.11
+>>>>>>> parent of 3495cae (vosk)
   flutter_tts: ^3.8.5
 =======
 >>>>>>> parent of 57e1b2c (sesli asistan)
