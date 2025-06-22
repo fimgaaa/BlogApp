@@ -1,3 +1,4 @@
+import 'package:blog_app_son/services/voice_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -238,6 +239,20 @@ class _BlogPostsPageState extends State<BlogPostsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Yazılarım"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.play_arrow),
+            onPressed: () {
+              VoiceService.instance.speak('Yazılarım');
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.stop),
+            onPressed: () {
+              VoiceService.instance.stop();
+            },
+          ),
+        ],
         // Tema'dan farklı bir renk isterseniz:
         // backgroundColor: Colors.deepPurple,
         // foregroundColor: Colors.white,

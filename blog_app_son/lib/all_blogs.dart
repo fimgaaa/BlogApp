@@ -1,3 +1,4 @@
+import 'package:blog_app_son/services/voice_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -50,6 +51,18 @@ class _AllBlogsPageState extends State<AllBlogsPage> {
       appBar: AppBar(
         title: Text("Tüm Blog Yazıları"),
         actions: [
+          IconButton(
+            icon: Icon(Icons.play_arrow),
+            onPressed: () {
+              VoiceService.instance.speak('Tüm Blog Yazıları');
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.stop),
+            onPressed: () {
+              VoiceService.instance.stop();
+            },
+          ),
           PopupMenuButton<String?>(
             icon: Icon(Icons.filter_list),
             tooltip: 'Kategoriye Göre Filtrele',
@@ -261,7 +274,24 @@ class BlogDetailPage extends StatelessWidget {
     final imageUrl = post['imageUrl'] as String?;
 
     return Scaffold(
-      appBar: AppBar(title: Text(post['title'] ?? 'Blog Detayı')),
+      //appBar: AppBar(title: Text(post['title'] ?? 'Blog Detayı')),
+      appBar: AppBar(
+        title: Text(post['title'] ?? 'Blog Detayı'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.play_arrow),
+            onPressed: () {
+              VoiceService.instance.speak(post['content'] ?? '');
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.stop),
+            onPressed: () {
+              VoiceService.instance.stop();
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

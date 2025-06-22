@@ -1,4 +1,5 @@
 import 'package:blog_app_son/all_blogs.dart';
+import 'package:blog_app_son/services/voice_services.dart';
 import 'package:flutter/material.dart';
 
 import 'login_page.dart';
@@ -10,6 +11,20 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: Text('AnlatApp'),
         backgroundColor: Colors.deepPurpleAccent,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.play_arrow),
+            onPressed: () {
+              VoiceService.instance.speak('Hoş Geldiniz');
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.stop),
+            onPressed: () {
+              VoiceService.instance.stop();
+            },
+          ),
+        ],
       ),
       body: Container(
         width: double.infinity,
