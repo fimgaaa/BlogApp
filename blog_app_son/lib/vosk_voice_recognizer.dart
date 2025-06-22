@@ -4,6 +4,7 @@ class VoskVoiceRecognizer {
   late SpeechService _speechService;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   Future<void> init() async {
     final modelLoader = ModelLoader();
     final modelPath = await modelLoader.loadFromAssets(
@@ -34,6 +35,8 @@ class VoskVoiceRecognizer {
   Future<void> stopListening() async {
     await _speechService.stop();
 =======
+=======
+>>>>>>> parent of ddb8620 (vosk fix model indirme)
 /// Simplified recognizer implementation using the Vosk plugin.
 class VoskVoiceRecognizer implements IVoiceRecognizer {
   final VoskFlutter _vosk = VoskFlutter();
@@ -58,6 +61,9 @@ class VoskVoiceRecognizer implements IVoiceRecognizer {
   @override
   void stop() {
     _vosk.stop();
+<<<<<<< HEAD
+>>>>>>> parent of ddb8620 (vosk fix model indirme)
+=======
 >>>>>>> parent of ddb8620 (vosk fix model indirme)
   }
 }
