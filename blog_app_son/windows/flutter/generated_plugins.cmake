@@ -8,10 +8,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_auth
   firebase_core
   firebase_storage
-<<<<<<< HEAD
-=======
-  flutter_tts
->>>>>>> parent of 3495cae (vosk)
   url_launcher_windows
 )
 
