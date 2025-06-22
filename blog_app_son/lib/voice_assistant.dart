@@ -1,18 +1,22 @@
+import 'package:blog_app_son/voice_recognizer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 
 class VoiceAssistantOverlay extends StatefulWidget {
   final Widget child;
-  const VoiceAssistantOverlay({Key? key, required this.child})
-    : super(key: key);
+  final IVoiceRecognizer recognizer;
+  const VoiceAssistantOverlay({
+    Key? key,
+    required this.child,
+    required this.recognizer,
+  }) : super(key: key);
 
   @override
   State<VoiceAssistantOverlay> createState() => _VoiceAssistantOverlayState();
 }
 
 class _VoiceAssistantOverlayState extends State<VoiceAssistantOverlay> {
-  final SpeechToText _speech = SpeechToText();
+  late final IVoiceRecognizer _recognizer = widget.recognizer;
   final FlutterTts _tts = FlutterTts();
   bool _isListening = false;
   bool _initialized = false;
@@ -26,7 +30,7 @@ class _VoiceAssistantOverlayState extends State<VoiceAssistantOverlay> {
   }
 
   Future<void> _initSpeech() async {
-    _initialized = await _speech.initialize();
+    _initialized = await _recognizer.initialize();
     if (_initialized) {
       _listenForWakeWord();
     }
@@ -34,26 +38,24 @@ class _VoiceAssistantOverlayState extends State<VoiceAssistantOverlay> {
 
   void _listenForWakeWord() {
     if (!_initialized) return;
-    _speech.listen(
-      onResult: (result) {
-        final text = result.recognizedWords.toLowerCase();
-        if (result.finalResult && text.contains(_wakeWord)) {
-          _speech.stop();
+    _recognizer.listen(
+      onResult: (text, finalResult) {
+        final lower = text.toLowerCase();
+        if (finalResult && lower.contains(_wakeWord)) {
+          _recognizer.stop();
           _startListening();
         }
       },
-      partialResults: true,
-      listenMode: ListenMode.dictation,
     );
   }
 
   Future<void> _startListening() async {
     if (!_initialized) return;
     setState(() => _isListening = true);
-    _speech.listen(
-      onResult: (result) {
-        if (result.finalResult && result.recognizedWords.isNotEmpty) {
-          _tts.speak(result.recognizedWords);
+    _recognizer.listen(
+      onResult: (text, finalResult) {
+        if (finalResult && text.isNotEmpty) {
+          _tts.speak(text);
           _stopListening();
         }
       },
@@ -61,7 +63,7 @@ class _VoiceAssistantOverlayState extends State<VoiceAssistantOverlay> {
   }
 
   void _stopListening() {
-    _speech.stop();
+    _recognizer.stop();
     setState(() => _isListening = false);
     _listenForWakeWord();
   }
@@ -70,7 +72,7 @@ class _VoiceAssistantOverlayState extends State<VoiceAssistantOverlay> {
     if (_isListening) {
       _stopListening();
     } else {
-      _speech.stop();
+      _recognizer.stop();
       _startListening();
     }
   }
