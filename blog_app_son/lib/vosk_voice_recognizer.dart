@@ -2,13 +2,15 @@ import 'package:vosk_flutter/vosk_flutter.dart';
 
 import 'voice_recognizer.dart';
 
-/// Simplified recognizer implementation using the Vosk plugin.
 class VoskVoiceRecognizer implements IVoiceRecognizer {
-  final VoskFlutter _vosk = VoskFlutter();
+  late final SpeechService _speechService;
 
   @override
   Future<bool> initialize() async {
-    await _vosk.init();
+    final model = await VoskModel.loadAssets(
+      'assets/models/vosk-model-small-tr-0.3',
+    );
+    _speechService = SpeechService(model);
     return true;
   }
 
@@ -16,7 +18,7 @@ class VoskVoiceRecognizer implements IVoiceRecognizer {
   void listen({
     required void Function(String text, bool finalResult) onResult,
   }) {
-    _vosk.start(
+    _speechService.start(
       onResult: (text, isFinal) {
         onResult(text, isFinal);
       },
@@ -25,6 +27,6 @@ class VoskVoiceRecognizer implements IVoiceRecognizer {
 
   @override
   void stop() {
-    _vosk.stop();
+    _speechService.stop();
   }
 }
