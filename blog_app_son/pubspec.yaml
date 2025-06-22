@@ -38,8 +38,12 @@ dependencies:
   cloud_firestore: ^4.15.10
   firebase_storage: ^11.6.0
 <<<<<<< HEAD
+<<<<<<< HEAD
   speech_to_text: ^6.6.0
   vosk_flutter: ^0.0.11
+=======
+  speech_to_text: ^6.4.0
+>>>>>>> parent of b2de723 (sesli asistan)
   flutter_tts: ^3.8.5
 =======
 >>>>>>> parent of 57e1b2c (sesli asistan)

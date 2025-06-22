@@ -19,6 +19,7 @@ class _VoiceAssistantOverlayState extends State<VoiceAssistantOverlay> {
   late final IVoiceRecognizer _recognizer = widget.recognizer;
   final FlutterTts _tts = FlutterTts();
   bool _isListening = false;
+<<<<<<< HEAD
   bool _initialized = false;
 
   static const String _wakeWord = 'hey asistan';
@@ -60,19 +61,36 @@ class _VoiceAssistantOverlayState extends State<VoiceAssistantOverlay> {
         }
       },
     );
+=======
+
+  Future<void> _startListening() async {
+    final available = await _speech.initialize();
+    if (available) {
+      setState(() => _isListening = true);
+      _speech.listen(
+        onResult: (result) {
+          if (result.finalResult && result.recognizedWords.isNotEmpty) {
+            _tts.speak(result.recognizedWords);
+          }
+        },
+      );
+    }
+>>>>>>> parent of b2de723 (sesli asistan)
   }
 
   void _stopListening() {
     _recognizer.stop();
     setState(() => _isListening = false);
-    _listenForWakeWord();
   }
 
   void _toggle() {
     if (_isListening) {
       _stopListening();
     } else {
+<<<<<<< HEAD
       _recognizer.stop();
+=======
+>>>>>>> parent of b2de723 (sesli asistan)
       _startListening();
     }
   }
