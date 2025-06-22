@@ -1,32 +1,23 @@
 import 'package:vosk_flutter/vosk_flutter.dart';
 
-import 'voice_recognizer.dart';
+class VoskVoiceRecognizer {
+  final Vosk vosk = Vosk();
 
-class VoskVoiceRecognizer implements IVoiceRecognizer {
-  late final SpeechService _speechService;
-
-  @override
-  Future<bool> initialize() async {
-    final model = await VoskModel.loadAssets(
-      'assets/models/vosk-model-small-tr-0.3',
-    );
-    _speechService = SpeechService(model);
-    return true;
+  Future<void> init() async {
+    await vosk.init(modelPath: 'assets/models/vosk-model-small-tr-0.3');
   }
 
-  @override
-  void listen({
-    required void Function(String text, bool finalResult) onResult,
-  }) {
-    _speechService.start(
-      onResult: (text, isFinal) {
-        onResult(text, isFinal);
-      },
-    );
+  void startListening() {
+    vosk.start();
+    vosk.onPartial = (text) {
+      print("Partial: $text");
+    };
+    vosk.onResult = (text) {
+      print("Final: $text");
+    };
   }
 
-  @override
-  void stop() {
-    _speechService.stop();
+  void stopListening() {
+    vosk.stop();
   }
 }
