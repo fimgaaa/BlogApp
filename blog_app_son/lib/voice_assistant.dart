@@ -15,30 +15,62 @@ class _VoiceAssistantOverlayState extends State<VoiceAssistantOverlay> {
   final SpeechToText _speech = SpeechToText();
   final FlutterTts _tts = FlutterTts();
   bool _isListening = false;
+  bool _initialized = false;
+
+  static const String _wakeWord = 'hey asistan';
+
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+  }
+
+  Future<void> _initSpeech() async {
+    _initialized = await _speech.initialize();
+    if (_initialized) {
+      _listenForWakeWord();
+    }
+  }
+
+  void _listenForWakeWord() {
+    if (!_initialized) return;
+    _speech.listen(
+      onResult: (result) {
+        final text = result.recognizedWords.toLowerCase();
+        if (result.finalResult && text.contains(_wakeWord)) {
+          _speech.stop();
+          _startListening();
+        }
+      },
+      partialResults: true,
+      listenMode: ListenMode.dictation,
+    );
+  }
 
   Future<void> _startListening() async {
-    final available = await _speech.initialize();
-    if (available) {
-      setState(() => _isListening = true);
-      _speech.listen(
-        onResult: (result) {
-          if (result.finalResult && result.recognizedWords.isNotEmpty) {
-            _tts.speak(result.recognizedWords);
-          }
-        },
-      );
-    }
+    if (!_initialized) return;
+    setState(() => _isListening = true);
+    _speech.listen(
+      onResult: (result) {
+        if (result.finalResult && result.recognizedWords.isNotEmpty) {
+          _tts.speak(result.recognizedWords);
+          _stopListening();
+        }
+      },
+    );
   }
 
   void _stopListening() {
     _speech.stop();
     setState(() => _isListening = false);
+    _listenForWakeWord();
   }
 
   void _toggle() {
     if (_isListening) {
       _stopListening();
     } else {
+      _speech.stop();
       _startListening();
     }
   }
