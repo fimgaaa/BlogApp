@@ -1,7 +1,7 @@
 import 'package:vosk_flutter/vosk_flutter.dart';
 
 class VoskVoiceRecognizer {
-  final Vosk vosk = Vosk();
+  final VoskFlutter vosk = VoskFlutter();
 
   Future<void> init() async {
     await vosk.init(modelPath: 'assets/models/vosk-model-small-tr-0.3');
