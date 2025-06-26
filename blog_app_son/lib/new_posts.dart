@@ -15,7 +15,7 @@ class _NewPostPageState extends State<NewPostPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
   String _selectedCategory = 'Teknoloji';
-  //bool _isPublished = false;
+  bool _isPublished = false;
 
   final ImagePicker _picker = ImagePicker(); // ImagePicker nesnesi
   XFile? _selectedImageFile; // Seçilen resim dosyasını tutacak değişken
@@ -138,7 +138,7 @@ class _NewPostPageState extends State<NewPostPage> {
             'content': _contentController.text,
             'category': _selectedCategory,
             'imageUrl': imageUrl,
-            //'isPublished': _isPublished,
+            'isPublished': _isPublished,
             'timestamp': FieldValue.serverTimestamp(),
             'author': userId,
           });
@@ -307,7 +307,7 @@ class _NewPostPageState extends State<NewPostPage> {
                 }
               },
             ),
-            /*  SizedBox(height: 15),
+            SizedBox(height: 15),
 
             SwitchListTile(
               title: Text("Yayına Al"),
@@ -327,7 +327,7 @@ class _NewPostPageState extends State<NewPostPage> {
                 borderRadius: BorderRadius.circular(5),
                 side: BorderSide(color: Colors.grey),
               ),
-            ),*/
+            ),
             SizedBox(height: 25),
             ElevatedButton.icon(
               icon: Icon(Icons.save_alt),
