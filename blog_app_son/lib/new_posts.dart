@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart'; // image_picker paketi eklendi
+import 'package:image_picker/image_picker.dart';
+
+import 'ai_tools_page.dart';
 
 class NewPostPage extends StatefulWidget {
   @override
@@ -184,6 +186,16 @@ class _NewPostPageState extends State<NewPostPage> {
       appBar: AppBar(
         title: Text("Yeni Blog Yazısı"),
         actions: [
+          IconButton(
+            icon: Icon(Icons.lightbulb_outline),
+            tooltip: "AI Yardımcısı",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AiToolsPage()),
+              );
+            },
+          ),
           IconButton(
             icon: Icon(Icons.save),
             tooltip: "Kaydet",

@@ -38,6 +38,7 @@ dependencies:
   cloud_firestore: ^4.15.10
   firebase_storage: ^11.6.0
   flutter_tts: ^3.8.0
+  google_generative_ai: ^0.2.0
 
 
 
