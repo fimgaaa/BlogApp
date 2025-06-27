@@ -94,7 +94,9 @@ class _AiToolsPageState extends State<AiToolsPage> {
             const SizedBox(height: 20),
             if (_loading) const CircularProgressIndicator(),
             if (!_loading)
-              Expanded(child: SingleChildScrollView(child: Text(_result))),
+              Expanded(
+                child: SingleChildScrollView(child: SelectableText(_result)),
+              ),
           ],
         ),
       ),
